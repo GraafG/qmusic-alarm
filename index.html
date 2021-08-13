@@ -1,0 +1,92 @@
+<!doctype html>
+<html class="no-js" lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Q-Music world-tour</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <audio loop id="alarm">
+		  <source src="mlg-airhorn.mp3" type="audio/mpeg">
+	</audio>
+		
+    <script src="https://alexschneider.github.io/pushbullet-js/pushbullet.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <h1>Q-Music world-tour NOW PLAYING:</h1>
+    <h3><span id="qmusic-artist">Artist</span> - <span id="qmusic-song">Song</span></h3>
+    <p>Todo:</br>
+        BLACKSTREET - No Diggity
+    </p>
+    <script>
+        PushBullet.APIKey = "X";
+		function sendMessage(messagetitle, message) {
+            var res = PushBullet.push("note", null, null, {
+                title: messagetitle,
+                body: messagetitle + " " + message
+            });
+            console.log(res);
+        }
+		
+        var x = document.getElementById("alarm");
+		function poundTheAlarm() {
+            x.play();
+            document.body.style.backgroundColor = "red";
+        }
+
+        function resetAlarm() {
+            x.pause();
+            document.body.style.backgroundColor = "white";
+        }
+		
+        var songs = [
+            "No Diggity"
+        ];
+        var artists = [
+            "blackstreet"
+        ];
+
+        function doesMatch(title, artist) {
+            if (songs.indexOf(title.toLowerCase()) > -1) {
+                var messagetitle = "Match found on Song Title " + title;
+                var message = title + " - " + artist;
+                console.log(messagetitle + message);
+                sendMessage(messagetitle, message);
+                return true;
+            } else if (artists.indexOf(artist.toLowerCase()) > -1) {
+                var messagetitle = "Match found on Artist Name " + artist;
+                var message = title + " - " + artist;
+                console.log(messagetitle + message);
+                sendMessage(messagetitle, message);
+                return true;
+            }
+        }
+        var checkMusic = function() {
+            resetAlarm();
+            // Qmusic
+            $.getJSON('https://api.q-music.nl/2.3/tracks/plays?limit=1&page=1&_station_id=qmusic_nl', function(data) {
+                var song = data.played_tracks[0];
+                console.log(song);
+                var songTitle = song.title;
+                var artistName = song.artist.original_name;
+                document.getElementById("qmusic-artist").innerHTML = artistName;
+                document.getElementById("qmusic-song").innerHTML = songTitle;
+                if (doesMatch(songTitle, artistName)) {
+                    poundTheAlarm();
+                }
+            });
+        };
+        checkMusic();
+        var musicInterval = setInterval(checkMusic, 30 * 1000); // 60 * 1000 milsec
+
+        document.getElementById('alarm').addEventListener('ended', function() {
+            this.currentTime = 0;
+        }, false);
+    </script>
+</body>
+
+</html>
